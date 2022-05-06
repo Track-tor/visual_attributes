@@ -189,7 +189,7 @@ if __name__ == '__main__' :
             for fquery in file:
                 fquery = fquery.strip()
                 im_query = ssearch.read_image(fquery)
-                idx = ssearch.search(im_query, metric)                
+                idx = ssearch.search(im_query)                
                 r_filenames = ssearch.get_filenames(idx)
 
                 original_tag = fquery.split("/")[5]
