@@ -28,8 +28,6 @@ class SSearch :
                                                classes=1000)
         model.summary()
         #redefining the model to get the hidden output
-        color_layer =  'conv2_block3_out'
-        texture_layer =  'conv4_block6_out'
         self.output_layer_name = layer
         output = model.get_layer(self.output_layer_name).output
         output = tf.keras.layers.GlobalAveragePooling2D()(output)                
@@ -83,7 +81,7 @@ class SSearch :
         """
         norm = np.sqrt(np.sum(np.square(data), axis = 1))
         norm = np.expand_dims(norm, 0)  
-        print(norm)      
+        #print(norm)      
         data = data / np.transpose(norm)
         return data
     
@@ -102,12 +100,12 @@ class SSearch :
                 query = self.square_root_norm(query)
             d = np.sqrt(np.sum(np.square(data - query[0]), axis = 1))
             idx_sorted = np.argsort(d)
-            print(d[idx_sorted][:20])
+            #print(d[idx_sorted][:20])
         elif metric == 'cos' : 
             sim = np.matmul(self.normalize(self.features), np.transpose(self.normalize(q_fv)))
             sim = np.reshape(sim, (-1))            
             idx_sorted = np.argsort(-sim)
-            print(sim[idx_sorted][:20])                
+            #print(sim[idx_sorted][:20])                
         return idx_sorted[:90]
         
                                 
@@ -161,7 +159,8 @@ if __name__ == '__main__' :
     parser.add_argument("-mode", type=str, choices = ['search', 'compute'], help=" mode of operation", required = True)
     parser.add_argument("-list", type=str,  help=" list of image to process", required = False)
     parser.add_argument("-odir", type=str,  help=" output dir", required = False, default = '.')
-    parser.add_argument("-layer", type=str,  help="layer", required = False, default = '.')
+    parser.add_argument("-layer", type=str,  help="layer", required = False, default = 'conv5_block3_out')
+    parser.add_argument("-type", type=str,  help="type", required = False, default = 'color')
     pargs = parser.parse_args()     
     configuration_file = pargs.config        
     ssearch = SSearch(pargs.config, pargs.name, pargs.layer)
@@ -185,17 +184,21 @@ if __name__ == '__main__' :
                 io.imsave(output_name, image_r)
                 print('result saved at {}'.format(output_name))                
         else :
-            fquery = input('Query:')
-            while fquery != 'quit' :
+            correct = 0
+            file = open(f'/content/data/features_{pargs.type}_{pargs.layer}/ssearch/catalog.txt')
+            for fquery in file:
+                fquery = fquery.strip()
                 im_query = ssearch.read_image(fquery)
                 idx = ssearch.search(im_query, metric)                
                 r_filenames = ssearch.get_filenames(idx)
-                r_filenames.insert(0, fquery)    
-                image_r= ssearch.draw_result(r_filenames)
-                output_name = os.path.basename(fquery) + '_{}_{}_result.png'.format(metric, norm, ssearch.output_layer_name)
-                output_name = os.path.join(pargs.odir, output_name)
-                io.imsave(output_name, image_r)
-                print('result saved at {}'.format(output_name))
-                fquery = input('Query:')
+
+                original_tag = fquery.split("/")[5]
+                predicted_tag = r_filenames[0].split("/")[5]
+                if(original_tag == predicted_tag): 
+                    correct += 1
+                print(f"original: {original_tag}, predicha: {predicted_tag}")
+            file.close()
+            print(f"accuracy: {correct/1000}%")
+                
         
         
