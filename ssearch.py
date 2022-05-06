@@ -198,7 +198,7 @@ if __name__ == '__main__' :
                     correct += 1
                 print(f"original: {original_tag}, predicha: {predicted_tag}")
             file.close()
-            print(f"accuracy: {correct/1000}%")
+            print(f"accuracy: {(correct/1000)*100}%")
                 
         
         
